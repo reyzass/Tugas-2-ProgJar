@@ -320,6 +320,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 Program klien ini berfungsi sebagai klien file sederhana yang mendukung perintah untuk mengelola file pada server melalui koneksi TCP. Klien dapat mengirim perintah untuk listing file, menghapus file, mendapatkan ukuran file, mengunduh file, dan mengunggah file. Program ini juga menangani kondisi koneksi, memastikan bahwa klien terhubung ke server sebelum mengirim perintah.
 
 ---
+COMMAND DOCUMENTATION
+-
 **connme & ls**
 ![image](https://github.com/reyzass/Tugas-2-ProgJar/assets/162030249/f09a7756-a0f1-4117-899d-888e7c1c0405)
 ---
