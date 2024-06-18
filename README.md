@@ -1,6 +1,6 @@
 ### Nama   : Reyza Syaifullah Sully  
-### NIM       : 1203220045
-Kelas  : IF 02-01 
+###  NIM    : 1203220045
+Kelas      : IF 02-01 
 -
 
 Pengantar
@@ -348,7 +348,17 @@ COMMAND DOCUMENTATION
 
 ---
 
-SOAL TAMBAHAN
+### SOAL TAMBAHAN
+
+1. Modifikasi agar file yang diterima dimasukkan ke folder tertentu
+2. Modifikasi program agar memberikan feedback nama file dan filesize yang diterima.
+3. Apa yang terjadi jika pengirim mengirimkan file dengan nama yang sama dengan file yang telah dikirim sebelumnya? Dapat menyebabkan masalah kah ? Lalu bagaimana solusinya? Implementasikan ke dalam program, solusi yang Anda berikan.
+
+---
+SOAL 1 & 2
+-
+
+SOAL 3
 -
 
 
