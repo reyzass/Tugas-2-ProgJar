@@ -355,11 +355,116 @@ COMMAND DOCUMENTATION
 3. Apa yang terjadi jika pengirim mengirimkan file dengan nama yang sama dengan file yang telah dikirim sebelumnya? Dapat menyebabkan masalah kah ? Lalu bagaimana solusinya? Implementasikan ke dalam program, solusi yang Anda berikan.
 
 ---
-SOAL 1 & 2
+SOAL 1 
 -
+### Penjelasan Modifikasi :
+**Server :**
+```python
+   elif command.startswith("upload"):
+        _, filename, folder = command.split(maxsplit=2)
+        try:
+```
+- Pada fungsi handle_command, perintah upload sekarang menerima dua argumen tambahan: filename dan folder.
+- Direktori folder yang ditentukan dibuat jika belum ada.
+- File disimpan ke dalam direktori folder yang ditentukan.
+  
+**Klien :**
+```python
+def send_file(conn, filename, folder):
+    file_path = os.path.join(client_directory, filename)
+```
+- Pada perintah upload, pengguna harus memasukkan filename dan folder.
+- Fungsi sent_file menerima argumen tambahan folder dan mengirim file ke server, termasuk informasi tentang folder tempat file harus disimpan.
+
+Dengan modifikasi ini, file yang diterima oleh server akan disimpan dalam folder yang ditentukan oleh klien.
+
+---
+
+SOAL 2
+-
+### Penjelasan Modifikasi :
+**Server :**
+```python
+ print(f"File {unique_filename} berhasil diterima dan disimpan di folder {folder}.")
+            response = f"File {unique_filename} berhasil diterima dengan ukuran {file_size / 1024:.2f} KB."
+```
+- Pada perintah upload, server memberikan umpan balik kepada klien mengenai nama file dan ukuran file yang diterima.
+- Setelah menerima file, server mengirimkan pesan kembali kepada klien dengan informasi nama file dan ukurannya.
+  
+**Klien :**
+```python
+elif command.lower().startswith("upload"):
+                s.send(command.encode())
+                _, filename, folder = command.split(maxsplit=2)
+                send_file(s, filename, folder)
+                response = s.recv(BUFFER_SIZE).decode()
+                print(response)
+```
+- Pada perintah upload, klien sekarang menunggu umpan balik dari server setelah mengirim file.
+- Umpan balik ini berisi informasi tentang nama file dan ukuran file yang diterima oleh server, yang kemudian ditampilkan oleh klien.
+  
+Dengan modifikasi ini, setiap file yang diterima oleh server akan memberikan umpan balik yang mencakup nama file dan ukuran file yang diterima, yang akan ditampilkan oleh klien.
+
+HASIL SOAL 1 & 2
+-
+![image](https://github.com/reyzass/Tugas-2-ProgJar/assets/162030249/a0f41f6e-3543-4ccb-8e1b-b1e9075d1fea)
+![image](https://github.com/reyzass/Tugas-2-ProgJar/assets/162030249/6160eb2f-b917-4f46-8fe1-570825527682)
+
+---
 
 SOAL 3
 -
+### Penjelasan Modifikasi :
+**Server :**
+```python
+def get_unique_filename(directory, filename):
+    base, ext = os.path.splitext(filename)
+    counter = 1
+    new_filename = filename
+    while os.path.exists(os.path.join(directory, new_filename)):
+        new_filename = f"{base}_{counter}{ext}"
+        counter += 1
+    return new_filename
+```
+```python
+elif command.startswith("upload"):
+        _, filename, folder = command.split(maxsplit=2)
+        try:
+            file_size = int.from_bytes(conn.recv(4), byteorder='big')
+            file_data = conn.recv(file_size)
+            folder_path = os.path.join(server_directory, folder)
+            if not os.path.exists(folder_path):
+                os.makedirs(folder_path)
+
+            unique_filename = get_unique_filename(folder_path, filename)
+            file_path = os.path.join(folder_path, unique_filename)
+```
+- Ditambahkan fungsi get_unique_filename untuk memastikan bahwa file yang diterima memiliki nama unik dengan menambahkan angka urutan di akhir nama file jika file dengan nama yang sama sudah ada.
+- Pada perintah upload, server menggunakan get_unique_filename untuk menentukan nama file yang unik sebelum menyimpan file.
+- Server mengirimkan umpan balik kepada klien mengenai nama file baru yang disimpan dan ukuran file yang diterima.
+  
+**Klien :**
+```python
+elif command.lower().startswith("upload"):
+                s.send(command.encode())
+                _, filename, folder = command.split(maxsplit=2)
+                send_file(s, filename, folder)
+                response = s.recv(BUFFER_SIZE).decode()
+                print(response)
+```
+- Klien menerima umpan balik dari server setelah mengirim file dan menampilkan informasi mengenai nama file baru yang disimpan dan ukuran file yang diterima oleh server.
+  
+Dengan modifikasi ini, setiap kali klien mengirim file dengan nama yang sama, server akan menyimpan file tersebut dengan nama yang berbeda untuk menghindari penimpaaan file yang sudah ada.
+
+HASIL SOAL 3
+-
+![image](https://github.com/reyzass/Tugas-2-ProgJar/assets/162030249/fd1ebd1a-c725-4f5b-8702-8a49b4b2868b)
+
+
+
+
+
+
 
 
 
