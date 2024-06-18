@@ -343,6 +343,7 @@ Program klien ini berfungsi sebagai klien file sederhana yang mendukung perintah
 ---
 **byebye**
 ![image](https://github.com/reyzass/Tugas-2-ProgJar/assets/162030249/3583130a-7330-4c79-803e-a7ee461a684d)
+
 ---
 
 SOAL TAMBAHAN
