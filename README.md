@@ -1,9 +1,8 @@
-Nama   : Reyza Syaifullah Sully  
--
-NIM    : 1203220045
--
+### Nama   : Reyza Syaifullah Sully  
+### NIM       : 1203220045
 Kelas  : IF 02-01 
 -
+
 Pengantar
 -
 Dokumen ini akan menjelaskan tentang sistem komunikasi klien-server yang menggunakan soket TCP. Terbagi menjadi dua bagian utama, yaitu sisi server dan sisi klien. Tujuannya adalah memfasilitasi komunikasi klien dengan server dan interaksi dengan sistem file server.
@@ -45,3 +44,283 @@ Panduan Penggunaan :
 Kesimpulan
 -
 Sistem klien-server ini menyediakan antarmuka sederhana untuk berkomunikasi dengan sistem file server menggunakan soket TCP. Pengguna dapat mengirim perintah ke server dan melakukan operasi seperti menampilkan daftar file, menghapus file, mengunggah file, dan mengunduh file. Tentunya, penggunaan sistem ini dapat ditingkatkan dengan peningkatan fitur keamanan dan penanganan kesalahan yang lebih baik.
+
+
+Penjelasan Code Program
+-
+
+### Server.py :
+
+### Bagian 1: Inisialisasi dan Konfigurasi
+```python
+import socket
+import os
+
+SERVER_ADDRESS = ("localhost", 5002)
+BUFFER_SIZE = 4096
+
+server_directory = 'server'
+if not os.path.exists(server_directory):
+    os.makedirs(server_directory)
+```
+- **Import Modules**: Mengimpor modul `socket` untuk komunikasi jaringan dan `os` untuk operasi sistem file.
+- **Konstanta**:
+  - `SERVER_ADDRESS`: Alamat dan port tempat server akan berjalan.
+  - `BUFFER_SIZE`: Ukuran buffer untuk menerima data.
+- **Direktori Server**: Menetapkan direktori tempat file akan disimpan (`server`). Jika direktori tidak ada, itu akan dibuat dengan `os.makedirs`.
+
+### Bagian 2: Fungsi Utilitas
+```python
+def list_files():
+    files = os.listdir(server_directory)
+    return "\n".join(files)
+
+def delete_file(filename):
+    path = os.path.join(server_directory, filename)
+    try:
+        os.remove(path)
+        return f"File {filename} berhasil dihapus."
+    except FileNotFoundError:
+        return "File tidak ditemukan."
+
+def get_file_size(filename):
+    try:
+        path = os.path.join(server_directory, filename)
+        filesize = os.path.getsize(path)
+        return f"Size: {filesize / 1024:.2f} KB"
+    except FileNotFoundError:
+        return "File tidak ditemukan."
+```
+- **list_files()**: Mengembalikan daftar file dalam direktori server sebagai string yang dipisahkan dengan baris baru.
+- **delete_file(filename)**: Menghapus file yang diberikan dari direktori server dan mengembalikan pesan konfirmasi atau pesan kesalahan jika file tidak ditemukan.
+- **get_file_size(filename)**: Mengembalikan ukuran file dalam kilobyte atau pesan kesalahan jika file tidak ditemukan.
+
+### Bagian 3: Fungsi Penanganan Perintah
+```python
+def handle_command(conn, command):
+    response = None
+    if command.lower().startswith("ls"):
+        response = list_files()
+    elif command.startswith("rm"):
+        _, filename = command.split(maxsplit=1)
+        response = delete_file(filename)
+    elif command.startswith("size"):
+        _, filename = command.split(maxsplit=1)
+        response = get_file_size(filename)
+    elif command.startswith("download"):
+        _, filename = command.split(maxsplit=1)
+        file_path = os.path.join(server_directory, filename)
+        if os.path.exists(file_path):
+            try:
+                with open(file_path, "rb") as f:
+                    file_data = f.read()
+                    file_length = len(file_data)
+                    conn.sendall(file_length.to_bytes(4, byteorder='big'))
+                    conn.sendall(file_data)
+            except Exception as e:
+                print(f"Gagal menerima file: {str(e)}")
+        else:
+            print("File tidak ditemukan pada server.")
+    elif command.startswith("upload"):
+        _, filename = command.split(maxsplit=1)
+        try:
+            file_size = int.from_bytes(conn.recv(4), byteorder='big')
+            file_data = conn.recv(file_size)
+            file_path = os.path.join(server_directory, filename)
+
+            if not os.path.exists(server_directory):
+                os.makedirs(server_directory)
+
+            with open(file_path, "wb") as f:
+                f.write(file_data)
+            print(f"File {filename} berhasil diterima dan disimpan.")
+        except Exception as e:
+            print(f"Gagal menerima file: {str(e)}")
+    elif command == "connme":
+        response = "[+] Berhasil Terkoneksi."
+    else:
+        response = "Perintah tidak valid."
+    
+    if response:
+        conn.send(response.encode())
+```
+- **handle_command(conn, command)**: Memproses perintah yang diterima dari klien. Perintah yang didukung meliputi:
+  - `ls`: Memanggil `list_files()` dan mengirim hasilnya ke klien.
+  - `rm <filename>`: Memanggil `delete_file()` dengan `filename` yang diberikan dan mengirim hasilnya ke klien.
+  - `size <filename>`: Memanggil `get_file_size()` dengan `filename` yang diberikan dan mengirim hasilnya ke klien.
+  - `download <filename>`: Mengirim file yang diminta ke klien jika file ada.
+  - `upload <filename>`: Menerima file dari klien dan menyimpannya di direktori server.
+  - `connme`: Mengirim pesan konfirmasi koneksi.
+  - Perintah lain: Mengirim pesan "Perintah tidak valid."
+
+### Bagian 4: Blok `with` untuk Socket
+```python
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    s.bind(SERVER_ADDRESS)
+    s.listen()
+    print("[*] Menunggu Koneksi")
+    conn, addr = s.accept()
+    print("[+] Berhasil Terkoneksi.")
+    with conn:
+        while True:
+            command = conn.recv(BUFFER_SIZE).decode()
+            if not command:
+                break
+            print(f"Menerima perintah: {command}")
+            if command.lower() == "byebye":
+                conn.send("Koneksi terputus dengan server.".encode())
+                break
+            if handle_command(conn, command):
+                break
+    conn.close()
+```
+- **Inisialisasi Socket**: Membuat socket TCP dan mengikatnya ke `SERVER_ADDRESS`.
+- **Menunggu Koneksi**: Server mendengarkan koneksi masuk menggunakan `s.listen()`.
+- **Menerima Koneksi**: Menerima koneksi dari klien dengan `s.accept()`.
+- **Loop Utama Server**: 
+  - Menerima perintah dari klien.
+  - Memproses perintah menggunakan `handle_command()`.
+  - Jika perintah `byebye` diterima, mengirim pesan konfirmasi dan memutuskan koneksi.
+
+### Kesimpulan
+Program ini berfungsi sebagai server file sederhana yang mendukung perintah untuk mengelola file pada server melalui koneksi TCP. Klien dapat mengirim perintah untuk listing file, menghapus file, mendapatkan ukuran file, mengunduh file, dan mengunggah file. Server memproses perintah tersebut dan mengirimkan balasan yang sesuai kepada klien.
+
+---
+
+### Client.py :
+
+### Bagian 1: Inisialisasi dan Konfigurasi
+```python
+import socket
+import os
+
+SERVER_ADDRESS = ("localhost", 5002)
+BUFFER_SIZE = 4096
+
+client_directory = 'client'
+if not os.path.exists(client_directory):
+    os.makedirs(client_directory)
+```
+- **Import Modules**: Mengimpor modul `socket` untuk komunikasi jaringan dan `os` untuk operasi sistem file.
+- **Konstanta**:
+  - `SERVER_ADDRESS`: Alamat dan port tempat server akan berjalan.
+  - `BUFFER_SIZE`: Ukuran buffer untuk menerima data.
+- **Direktori Klien**: Menetapkan direktori tempat file akan disimpan (`client`). Jika direktori tidak ada, itu akan dibuat dengan `os.makedirs`.
+
+### Bagian 2: Fungsi Utilitas
+```python
+def receive_file(s, filename):
+    try:
+        file_size = int.from_bytes(s.recv(4), byteorder='big')
+        file_data = s.recv(file_size)
+        file_path = os.path.join(client_directory, filename)
+
+        if not os.path.exists(client_directory):
+            os.makedirs(client_directory)
+
+        with open(file_path, "wb") as f:
+            f.write(file_data)
+        print(f"File {filename} berhasil diterima.")
+    except FileNotFoundError:
+        print("Direktori untuk penyimpanan file tidak ada.")
+    except Exception as e:
+        print(f"Gagal menerima file: {str(e)}")
+```
+- **receive_file(s, filename)**: Menerima file dari server dan menyimpannya di direktori klien.
+  - Menerima ukuran file terlebih dahulu.
+  - Membaca data file sesuai dengan ukuran yang diterima.
+  - Menyimpan data file ke direktori klien.
+  - Menangani pengecualian untuk kesalahan yang mungkin terjadi selama penerimaan file.
+
+```python
+def sent_file(conn, filename):
+    file_path = os.path.join(client_directory, filename)
+    if os.path.exists(file_path):
+        try:
+            with open(file_path, "rb") as f:
+                file_data = f.read()
+                file_length = len(file_data)
+                conn.sendall(file_length.to_bytes(4, byteorder='big'))
+                conn.sendall(file_data)
+            print(f"File {filename} berhasil dikirim.")
+        except Exception as e:
+            print(f"Gagal mengirim file: {str(e)}")
+    else:
+        print("File tidak ditemukan pada client.")
+```
+- **sent_file(conn, filename)**: Mengirim file dari klien ke server.
+  - Membaca data file dari direktori klien.
+  - Mengirim ukuran file terlebih dahulu.
+  - Mengirim data file ke server.
+  - Menangani pengecualian untuk kesalahan yang mungkin terjadi selama pengiriman file.
+
+### Bagian 3: Loop Utama Klien
+```python
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    print("[*] Client sedang berjalan.")
+    connected = False  
+    while True:
+        command = input("Masukkan perintah: ").strip()
+        if not command:
+            continue
+        
+        if command.lower() == 'connme':
+            s.connect(SERVER_ADDRESS)
+            
+            s.send(command.encode())  
+            response = s.recv(BUFFER_SIZE).decode()
+            print(response)
+            connected = True  
+        elif connected:
+            if command.lower() == 'ls':
+                s.send(command.encode())  
+                response = s.recv(BUFFER_SIZE).decode()
+                print(response)  
+            elif command.lower().startswith("rm"):
+                s.send(command.encode())
+                response = s.recv(BUFFER_SIZE).decode()
+                print(response)
+            elif command.lower().startswith("size"):
+                s.send(command.encode())
+                response = s.recv(BUFFER_SIZE).decode()
+                print(response)
+            elif command.lower().startswith("download"):
+                s.send(command.encode()) 
+                _, filename = command.split(maxsplit=1)
+                receive_file(s, filename)
+            elif command.lower().startswith("upload"):
+                s.send(command.encode())
+                _, filename = command.split(maxsplit=1)
+                sent_file(s, filename)
+            elif command.lower() == 'byebye':
+                s.send(command.encode())
+                response = s.recv(BUFFER_SIZE).decode()
+                print(response)
+                s.close()  
+                break
+            else:
+                response = "Invalid command."
+                print(response)
+        else:
+            print("Client belum terhubung ke server.")
+```
+- **Inisialisasi Socket**: Membuat socket TCP dan menunggu perintah dari pengguna.
+- **Loop Utama**: Menunggu perintah dari pengguna dan memprosesnya.
+  - **connme**: Menghubungkan ke server dan mengirim perintah `connme`.
+  - **ls**: Mengirim perintah `ls` ke server dan menampilkan respons yang diterima.
+  - **rm <filename>**: Mengirim perintah `rm` dengan `filename` ke server dan menampilkan respons yang diterima.
+  - **size <filename>**: Mengirim perintah `size` dengan `filename` ke server dan menampilkan respons yang diterima.
+  - **download <filename>**: Mengirim perintah `download` dengan `filename` ke server dan menerima file yang diminta.
+  - **upload <filename>**: Mengirim perintah `upload` dengan `filename` ke server dan mengirim file yang diminta.
+  - **byebye**: Mengirim perintah `byebye` ke server dan menutup koneksi.
+  - Perintah tidak valid: Menampilkan pesan "Invalid command."
+  - **Koneksi ke Server**: Menangani kondisi di mana klien belum terhubung ke server sebelum mengirim perintah.
+
+### Kesimpulan
+Program klien ini berfungsi sebagai klien file sederhana yang mendukung perintah untuk mengelola file pada server melalui koneksi TCP. Klien dapat mengirim perintah untuk listing file, menghapus file, mendapatkan ukuran file, mengunduh file, dan mengunggah file. Program ini juga menangani kondisi koneksi, memastikan bahwa klien terhubung ke server sebelum mengirim perintah.
+
+---
+SOAL TAMBAHAN
+-
+
+
