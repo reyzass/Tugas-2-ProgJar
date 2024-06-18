@@ -7,7 +7,7 @@ BUFFER_SIZE = 4096
 server_directory = 'server'
 if not os.path.exists(server_directory):
     os.makedirs(server_directory)
-    
+
 def list_files():
     files = os.listdir(server_directory)
     return "\n".join(files)
@@ -27,7 +27,16 @@ def get_file_size(filename):
         return f"Size: {filesize / 1024:.2f} KB"
     except FileNotFoundError:
         return "File tidak ditemukan."
-      
+
+def get_unique_filename(directory, filename):
+    base, ext = os.path.splitext(filename)
+    counter = 1
+    new_filename = filename
+    while os.path.exists(os.path.join(directory, new_filename)):
+        new_filename = f"{base}_{counter}{ext}"
+        counter += 1
+    return new_filename
+
 def handle_command(conn, command):
     response = None
     if command.lower().startswith("ls"):
@@ -48,34 +57,36 @@ def handle_command(conn, command):
                     file_length = len(file_data)
                     conn.sendall(file_length.to_bytes(4, byteorder='big'))
                     conn.sendall(file_data)
-                    # conn.sendall(f.read())
             except Exception as e:
-                print(f"Gagal menerima file: {str(e)}")
+                print(f"Gagal mengirim file: {str(e)}")
         else:
             print("File tidak ditemukan pada server.")
     elif command.startswith("upload"):
-        _, filename = command.split(maxsplit=1)
+        _, filename, folder = command.split(maxsplit=2)
         try:
             file_size = int.from_bytes(conn.recv(4), byteorder='big')
             file_data = conn.recv(file_size)
-            file_path = os.path.join(server_directory, filename)
+            folder_path = os.path.join(server_directory, folder)
+            if not os.path.exists(folder_path):
+                os.makedirs(folder_path)
 
-            if not os.path.exists(server_directory):
-                os.makedirs(server_directory)
+            unique_filename = get_unique_filename(folder_path, filename)
+            file_path = os.path.join(folder_path, unique_filename)
 
             with open(file_path, "wb") as f:
                 f.write(file_data)
-            print(f"File {filename} berhasil diterima dan disimpan.")
+            print(f"File {unique_filename} berhasil diterima dan disimpan di folder {folder}.")
+            response = f"File {unique_filename} berhasil diterima dengan ukuran {file_size / 1024:.2f} KB."
         except Exception as e:
             print(f"Gagal menerima file: {str(e)}")
+            response = f"Gagal menerima file: {str(e)}"
     elif command == "connme":
         response = "[+] Berhasil Terkoneksi."
     else:
         response = "Perintah tidak valid."
-    
+
     if response:
         conn.send(response.encode())
-
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.bind(SERVER_ADDRESS)
