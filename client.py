@@ -19,13 +19,13 @@ def receive_file(s, filename):
 
         with open(file_path, "wb") as f:
             f.write(file_data)
-        print(f"File {filename} berhasil diterima.")
+        print(f"File {filename} berhasil diterima dengan ukuran {file_size / 1024:.2f} KB.")
     except FileNotFoundError:
         print("Direktori untuk penyimpanan file tidak ada.")
     except Exception as e:
         print(f"Gagal menerima file: {str(e)}")
-        
-def sent_file(conn, filename):
+
+def send_file(conn, filename, folder):
     file_path = os.path.join(client_directory, filename)
     if os.path.exists(file_path):
         try:
@@ -34,32 +34,32 @@ def sent_file(conn, filename):
                 file_length = len(file_data)
                 conn.sendall(file_length.to_bytes(4, byteorder='big'))
                 conn.sendall(file_data)
-            print(f"File {filename} berhasil dikirim.")
+            print(f"File {filename} berhasil dikirim ke folder {folder}.")
         except Exception as e:
             print(f"Gagal mengirim file: {str(e)}")
     else:
         print("File tidak ditemukan pada client.")
-            
+
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     print("[*] Client sedang berjalan.")
-    connected = False  
+    connected = False
     while True:
         command = input("Masukkan perintah: ").strip()
         if not command:
             continue
-        
+
         if command.lower() == 'connme':
             s.connect(SERVER_ADDRESS)
-            
-            s.send(command.encode())  
+
+            s.send(command.encode())
             response = s.recv(BUFFER_SIZE).decode()
             print(response)
-            connected = True  
+            connected = True
         elif connected:
             if command.lower() == 'ls':
-                s.send(command.encode())  
+                s.send(command.encode())
                 response = s.recv(BUFFER_SIZE).decode()
-                print(response)  
+                print(response)
             elif command.lower().startswith("rm"):
                 s.send(command.encode())
                 response = s.recv(BUFFER_SIZE).decode()
@@ -69,18 +69,20 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 response = s.recv(BUFFER_SIZE).decode()
                 print(response)
             elif command.lower().startswith("download"):
-                s.send(command.encode()) 
+                s.send(command.encode())
                 _, filename = command.split(maxsplit=1)
                 receive_file(s, filename)
             elif command.lower().startswith("upload"):
                 s.send(command.encode())
-                _, filename = command.split(maxsplit=1)
-                sent_file(s, filename)
+                _, filename, folder = command.split(maxsplit=2)
+                send_file(s, filename, folder)
+                response = s.recv(BUFFER_SIZE).decode()
+                print(response)
             elif command.lower() == 'byebye':
                 s.send(command.encode())
                 response = s.recv(BUFFER_SIZE).decode()
                 print(response)
-                s.close()  
+                s.close()
                 break
             else:
                 response = "Invalid command."
@@ -88,4 +90,3 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
         else:
             print("Client belum terhubung ke server.")
-            
