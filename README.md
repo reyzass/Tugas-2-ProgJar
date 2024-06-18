@@ -320,8 +320,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 Program klien ini berfungsi sebagai klien file sederhana yang mendukung perintah untuk mengelola file pada server melalui koneksi TCP. Klien dapat mengirim perintah untuk listing file, menghapus file, mendapatkan ukuran file, mengunduh file, dan mengunggah file. Program ini juga menangani kondisi koneksi, memastikan bahwa klien terhubung ke server sebelum mengirim perintah.
 
 ---
-SOAL TAMBAHAN
--
 **connme & ls**
 ![image](https://github.com/reyzass/Tugas-2-ProgJar/assets/162030249/f09a7756-a0f1-4117-899d-888e7c1c0405)
 ---
@@ -334,10 +332,14 @@ SOAL TAMBAHAN
 ![image](https://github.com/reyzass/Tugas-2-ProgJar/assets/162030249/29fc5a15-396f-4604-810f-78f20ec297ec)
 ---
 **download <filename>**
-![image](https://github.com/reyzass/Tugas-2-ProgJar/assets/162030249/40a2d25c-bf52-4a3a-87bc-abba089589d8)
+-
+![image](https://github.com/reyzass/Tugas-2-ProgJar/assets/162030249/7b628357-9efa-4868-8308-41f337c9e8db)
+![image](https://github.com/reyzass/Tugas-2-ProgJar/assets/162030249/26a0e4d5-c164-499f-8684-c5fa30f2cc5f)
 ---
 **upload <filename>**
-![image](https://github.com/reyzass/Tugas-2-ProgJar/assets/162030249/b0091f1a-7249-4329-963e-ff4a6ad3eb28)
+-
+![image](https://github.com/reyzass/Tugas-2-ProgJar/assets/162030249/f162452d-32d8-4476-be2c-4528817ad8e2)
+![image](https://github.com/reyzass/Tugas-2-ProgJar/assets/162030249/002087c1-3c7f-4c9d-9252-f1150955147f)
 ---
 **byebye**
 ![image](https://github.com/reyzass/Tugas-2-ProgJar/assets/162030249/3583130a-7330-4c79-803e-a7ee461a684d)
