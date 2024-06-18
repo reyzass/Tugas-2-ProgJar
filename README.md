@@ -322,5 +322,29 @@ Program klien ini berfungsi sebagai klien file sederhana yang mendukung perintah
 ---
 SOAL TAMBAHAN
 -
+**connme & ls**
+![image](https://github.com/reyzass/Tugas-2-ProgJar/assets/162030249/f09a7756-a0f1-4117-899d-888e7c1c0405)
+---
+**rm <filename>**
+-
+![image](https://github.com/reyzass/Tugas-2-ProgJar/assets/162030249/b24b986e-f0f3-4c6f-82f5-477e5a38ba31)
+![image](https://github.com/reyzass/Tugas-2-ProgJar/assets/162030249/4397af77-8122-4123-be20-e7c292ae8411)
+---
+**size <filename>**
+![image](https://github.com/reyzass/Tugas-2-ProgJar/assets/162030249/29fc5a15-396f-4604-810f-78f20ec297ec)
+---
+**download <filename>**
+![image](https://github.com/reyzass/Tugas-2-ProgJar/assets/162030249/40a2d25c-bf52-4a3a-87bc-abba089589d8)
+---
+**upload <filename>**
+![image](https://github.com/reyzass/Tugas-2-ProgJar/assets/162030249/b0091f1a-7249-4329-963e-ff4a6ad3eb28)
+---
+**byebye**
+![image](https://github.com/reyzass/Tugas-2-ProgJar/assets/162030249/3583130a-7330-4c79-803e-a7ee461a684d)
+---
+
+SOAL TAMBAHAN
+-
+
 
 
